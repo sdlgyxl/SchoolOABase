@@ -1,0 +1,97 @@
+{% extends "base-popup.html" %}
+{% load staticfiles %}
+{% block css %}
+    <link href="{% static 'css/plugins/dualListbox/bootstrap-duallistbox.min.css' %}" rel="stylesheet">
+{% endblock %}
+{% block content %}
+    <div class="ibox-content">
+        <form class="form-horizontal" id="selectInstructorsForm" action="" method="post">
+            {% csrf_token %}
+            <input type="hidden" name='id' value="{{ group.id }}"/>
+            <legend style="overflow:hidden">
+                <h4 style="float: left">关联教师：{{ group.name }}
+                    <small>一个教师可以隶属多个角色</small>
+                </h4>
+            </legend>
+            <div class="row">
+                <div class="col-12 margin-top-5">
+                    <form id="form" action="#" class="wizard-big">
+                        <select class="form-control dual_select" multiple id="selInstructors" name="selInstructors">
+                            {% for item in un_add_instructors %}
+                                <option value="{{ item.id }}">{{ item.name }}({{ item.username }}) -- [{{ item.department.name|default:"无部门" }}]</option>
+                            {% endfor %}
+                            {% for item in added_instructors %}
+                                <option selected value="{{ item.id }}">{{ item.name }}({{ item.username }}) -- [{{ item.department.name }}]</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </div>
+            </div>
+            <div class="hr-line-dashed"></div>
+            <div class="form-group row">
+                <div style="margin:0 auto">
+                    <button type="button" id="btnCancel" class="btn btn-default margin-right ">重置</button>
+                    <button type="button" id="btnSave" class="btn btn-info margin-right ">保存</button>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script src="{% static 'js/plugins/dualListbox/jquery.bootstrap-duallistbox.js' %}"></script>
+    <script type="text/javascript">
+        var selectorx = $('.dual_select').bootstrapDualListbox({
+            selectorMinimalHeight: 230,
+            nonSelectedListLabel: '',//未选项
+            selectedListLabel: '',//已选项
+            filterTextClear: '全部',
+            filterPlaceHolder: '过滤条件',
+            preserveSelectionOnMove: 'moved',
+            //moveOnSelect: false,
+            moveAllLabel: '添加全部',
+            moveSelectedLabel: '添加选中',
+            removeAllLabel: '移除全部',
+            removeSelectedLabel: '移除选中',
+            infoText: '选中/未选中共 {0} 项',
+            infoTextFiltered: '从 {1} 项 筛选 {0} 项',
+            infoTextEmpty: '空'
+        });
+
+        $("#btnSave").click(function () {
+            var data = $("#selectInstructorsForm").serialize();
+            $.ajax({
+                type: "post",
+                url: "{% url 'system:group-group2instructor' %}",
+                data: data,
+                cache: false,
+                success: function (msg) {
+                    if (msg.result) {
+                        swal({
+                            title: "操作成功",
+                            type: "success",
+                            confirmButtonText: "确定"
+                        }, function () {
+                            parent.closePopup('#popup-div');
+                        });
+                    } else {
+                        swal({
+                            title: "操作失败",
+                            type: "warning",
+                            //showCancelButton: true,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "确定",
+                            closeOnConfirm: false
+                        });
+                    }
+                    return;
+                }
+            });
+        });
+
+        /*点取消刷新新页面*/
+        $("#btnCancel").click(function () {
+            window.location.reload();
+        });
+    </script>
+{% endblock %}

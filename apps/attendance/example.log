@@ -1,0 +1,16 @@
+DEBUG:root:This message should go to the log file
+INFO:root:So should this
+WARNING:root:And this, too
+WARNING:root:And this, too 测试一下汉字
+DEBUG:root:This message should go to the log file
+INFO:root:So should this
+WARNING:root:And this, too
+WARNING:root:And this, too 测试一下汉字
+DEBUG:root:This message should go to the log file
+INFO:root:So should this
+WARNING:root:And this, too
+WARNING:root:And this, too 测试一下汉字
+2019-09-06 10:09:19 DEBUG:This message should go to the log file
+2019-09-06 10:09:19 INFO:So should this
+2019-09-06 10:09:19 WARNING:And this, too
+2019-09-06 10:09:19 WARNING:And this, too 测试一下汉字

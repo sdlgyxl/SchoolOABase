@@ -1,0 +1,169 @@
+{% extends 'base-popup.html' %}
+{% load staticfiles %}
+{% block css %}
+    <style>
+        td, th {
+            border-bottom: 1px solid #aaa;
+            padding: 5px 0
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="ibox-content">
+        <form class="form-horizontal" id="editForm" method="post">
+            <input type="hidden" name='id' value="{{ data.id }}"/>
+            {% csrf_token %}
+            <div class="form-group row">
+                <label class="col-2 col-form-label">申请人</label>
+                <div class="col-3">
+                    <input class="form-control" type="text" value="{{ data.applicant.name }}"/>
+                </div>
+                <label class="col-2 col-form-label">部门</label>
+                <div class="col-3">
+                    <input class="form-control" type="text" value="{{ data.applicant.department.name }}"/>
+                </div>
+            </div>
+            {% if moduleName == "leave" %}
+                {% include "attendance/Leaves/leave-process.html" %}
+            {% endif %}
+            {% if moduleName == "nocheckin" %}
+                {% include "attendance/nocheckins/nocheckin-process.html" %}
+            {% endif %}
+            {% if moduleName == "overtime" %}
+                {% include "attendance/overtimes/overtime-process.html" %}
+            {% endif %}
+            {% if moduleName == "outwork" %}
+                {% include "attendance/outworks/outwork-process.html" %}
+            {% endif %}
+            <div class="hr-line-dashed"></div>
+            {% if  request.user.id == data.auditor.id and data.result == 0 %}
+                {% if position == "部门主管" or position == "校区主任" %}
+                    <div class="form-group row">
+                        <label class="col-2 col-form-label">审核结果</label>
+                        <div class="i-checks col-8">
+                            <label>
+                                <input type="radio" checked="checked" value="1" name="is_agree">
+                                <i></i> 同意 &nbsp;
+                                <input type="radio" value="2" name="is_agree">
+                                <i></i> 不同意
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group row">
+                        <label class="col-2 col-form-label">审核意见</label>
+                        <div class="col-8">
+                            <textarea class="form-control" name="opinion" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="hr-line-dashed"></div>
+                {% endif %}
+            {% endif %}
+            <div class="form-group row">
+                <div style="margin:0 auto">
+                    <button type="button" id="btnCancel" class="btn btn-default margin-right ">关闭</button>
+                    {% if data.result == 0 %}
+                        {% if request.user.id == data.applicant.id and data.result == 0 %}
+                            <button type="button" id="btnDelete" class="btn btn-info margin-right ">删除</button>
+                        {% endif %}
+                        {% if request.user.id == data.auditor.id %}
+                            {% if position == "部门主管" %}
+                                <button type="button" id="btnSubmit" class="btn btn-info margin-right ">提交上级</button>
+                            {% endif %}
+                            {% if position == "校区主任" %}
+                                <button type="button" id="btnSubmit" class="btn btn-info margin-right ">审批完成</button>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+        <div class="form-group row">
+            <div class="col-1"></div>
+            <div class="col-10">
+                <legend>
+                    <h4>审批记录</h4>
+                </legend>
+                <table id="dtbList" class="display"
+                       style="width:100%">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>审批人</th>
+                        <th>接收时间</th>
+                        <th>查看时间</th>
+                        <th>审批时间</th>
+                        <th>审批结果</th>
+                        <th>审批意见</th>
+                    </tr>
+                    </thead>
+                    {% for item in logs %}
+                        <tr>
+                            <td>{{ item.id }}</td>
+                            <td>{{ item.auditor__name }}</td>
+                            <td>{{ item.crdate }}</td>
+                            <td>{{ item.view_time|default_if_none:'' }}</td>
+                            <td>{{ item.process_time|default_if_none:'' }}</td>
+                            <td>
+                                {% if item.is_agree == 0 %}待审批{% endif %}
+                                {% if item.is_agree == 1 %}同意{% endif %}
+                                {% if item.is_agree == 2 %}不同意{% endif %}
+                            </td>
+                            <td>{{ item.opinion|default_if_none:'' }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script type="text/javascript">
+
+        $("#btnSubmit").click(function () {
+            doSave('editForm', "{{ applyUrl }}", '{{ moduleTitle }}提交成功', 1);
+        });
+        $("#btnDelete").click(function () {
+            deleteData("/attendance/{{ moduleName }}/delete/", "{{ csrf_token }}", {{ data.id }});
+        });
+        /*点取消刷新新页面*/
+        $("#btnCancel").click(function () {
+            parent.closePopup();
+        });
+
+        //删除
+        function deleteData(toUrl, csrf_token, del_id) {
+            sId = del_id;
+            swal({
+                    title: "确定删除选中的{{ moduleTitle }}吗？",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#DD6B55",
+                    confirmButtonText: "删除",
+                    cancelButtonText: "取消",
+                    closeOnConfirm: false,
+                },
+                function (isConfirm) {
+                    if (isConfirm) {
+                        $.ajax({
+                            type: "POST",
+                            url: toUrl,
+                            data: {"id": sId, csrfmiddlewaretoken: csrf_token},
+                            cache: false,
+                            success: function (msg) {
+                                if (msg.result) {
+                                    swal('操作成功', "", "success");
+                                    window.parent.location.reload();
+                                } else {
+                                    swal('操作失败', "", "warning");
+                                }
+                                return;
+                            }
+                        });
+                    }
+                });
+        }
+
+    </script>
+
+{% endblock %}

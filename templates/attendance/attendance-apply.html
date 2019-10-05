@@ -1,0 +1,65 @@
+{% extends 'base-popup.html' %}
+{% load staticfiles %}
+
+{% block content %}
+    <div class="ibox-content">
+        <form class="form-horizontal" id="applyForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" name='step' value="{{ step }}"/>
+            <input type="hidden" name='auditor'
+                   value="{{ request.user.superior.id|default:request.user.id }}"/>
+            <input type="hidden" name='applicant' value="{{ request.user.id }}"/>
+            <input type="hidden" name='result' value="0"/>
+            <input type="hidden" name='crdate' value="{% now 'Y-m-d h:i:s' %}"/>
+            <div class="form-group row">
+                <label class="col-2 col-form-label">申请人</label>
+                <div class="col-3">
+                    <input class="form-control" type="text" name="applicant_name" disabled="disabled"
+                           value="{{ request.user.name }}"/>
+                </div>
+                <label class="col-2 col-form-label">发送至</label>
+                <div class="col-3">
+                    <input class="form-control" type="text" name="cur_processer_name" disabled="disabled"
+                           value="{{ request.user.superior.name|default:request.user.name }}"/>
+                </div>
+            </div>
+            {% if moduleName == "leave" %}
+                {% include "attendance/Leaves/leave-apply.html" %}
+            {% endif %}
+            {% if moduleName == "nocheckin" %}
+                {% include "attendance/nocheckins/nocheckin-apply.html" %}
+            {% endif %}
+            {% if moduleName == "overtime" %}
+                {% include "attendance/overtimes/overtime-apply.html" %}
+            {% endif %}
+            {% if moduleName == "outwork" %}
+                {% include "attendance/outworks/outwork-apply.html" %}
+            {% endif %}
+            <div class="form-group row">
+                <div style="margin:0 auto">
+                    <button type="button" id="btnCancel" class="btn btn-default margin-right ">关闭</button>
+                    <button type="button" id="btnSave" class="btn btn-info margin-right ">
+                        {% if step == 2 %}
+                            提交部门主管
+                        {% else %}
+                            提交校区主任
+                        {% endif %}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script type="text/javascript">
+        $("#btnSave").click(function () {
+            doSave('applyForm', "{{ applyUrl }}", '{{ moduleTitle }}保存成功', 1);
+        });
+        /*点取消刷新新页面*/
+        $("#btnCancel").click(function () {
+            parent.closePopup();
+        });
+    </script>
+
+{% endblock %}

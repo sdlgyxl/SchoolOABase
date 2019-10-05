@@ -1,0 +1,174 @@
+{% extends "base-popup.html" %}
+{% load staticfiles %}
+{% block content %}
+    <div class="ibox-content">
+        <form class="form-horizontal" id="addForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" name='id' value="{{ user.id }}"/>
+            <input type="hidden" name='user' value="save"/>
+            <legend style="overflow:hidden">
+                <h4 style="width: 200px;float: left">基本信息</h4>
+            </legend>
+            <div class="form-group row">
+                <label class="col-2 col-form-label">姓名</label>
+                <div class="col-3">
+                    <input class="form-control" name="name" type="text" value=""/>
+                </div>
+                <label class="col-2 col-form-label">用户名</label>
+                <div class="col-3">
+                    <input class="form-control" name="username" type="text" value=""/>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-2 col-form-label">生日</label>
+                <div class="col-3">
+                    <input class="form-control form_datetime" name="birthday" type="date" value=""/>
+                </div>
+                <label class="col-2 col-form-label">性别</label>
+                <div class="col-3">
+                    <select class="form-control" name="gender">
+                        <option value="男">男</option>
+                        <option value="女">女</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-2 col-form-label">手机</label>
+                <div class="col-3">
+                    <input class="form-control" name="mobile" type="text"/>
+                </div>
+                <label class="col-2 col-form-label">邮箱</label>
+                <div class="col-3">
+                    <input class="form-control" name="email" type="text"/>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-2 col-form-label">状态</label>
+                <div class="i-checks col-3">
+                    <label>
+                        <input type="radio" checked="checked" value="True" name="is_active">
+                        <i></i> 启用 &nbsp;
+                        <input type="radio" value="False" name="is_active">
+                        <i></i> 禁用
+                    </label>
+                </div>
+                <label class="col-2 col-form-label">部门经理</label>
+                <div class="i-checks col-3">
+                    <label>
+                        <input type="radio" value="True" name="is_manager"
+                               {% if instructor.is_manager %}checked="checked"{% endif %}>
+                        <i></i> 是 &nbsp;
+                        <input type="radio" value="False" name="is_manager"
+                               {% if not instructor.is_manager %}checked="checked"{% endif %}>
+                        <i></i> 否
+                    </label>
+                </div>
+            </div>
+            <legend>
+                <h4>密码信息</h4>
+            </legend>
+            <div class="form-group row">
+                <label class="col-2 col-form-label">密码</label>
+                <div class="col-3">
+                    <input class="form-control" name="password" type="password" value=""/>
+                </div>
+                <label class="col-2 col-form-label">确认密码</label>
+                <div class="col-3">
+                    <input class="form-control" name="confirm_password" type="password" value=""/>
+                </div>
+            </div>
+            <legend>
+                <h4>职员信息</h4>
+            </legend>
+            <div class="form-group row">
+                <label class="col-2 col-form-label">入职日期</label>
+                <div class="col-3">
+                    <input type="date" class="form-control pull-right form_datetime" name="joined_date"/>
+                </div>
+                <label class="col-2 col-form-label">部门</label>
+                <div class="col-3">
+                    <select class="form-control select2" style="width:100%;" name="department">
+                        <option value="">--部门--</option>
+                        {% for department in departments %}
+                            <option value="{{ department.id }}">{{ department.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-2 col-form-label">岗位</label>
+                <div class="col-3">
+                    <input class="form-control" name="post" type="text"/>
+                </div>
+                <label class="col-2 col-form-label">上级</label>
+                <div class="col-3">
+                    <select class="form-control select2" style="width:100%;" name="superior">
+                        <option value="">--上级--</option>
+                        {% for instructor in instructors %}
+                            <option value="{{ instructor.id }}">{{ instructor.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-2 col-form-label">所属角色组</label>
+                <div class="col-9 i-checks">
+                    {% for group in groups %}
+                        <label>
+                            <input type="checkbox" class="minimal" name="groups"
+                                   value="{{ group.id }}"> {{ group.name }}
+                            &nbsp;
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="hr-line-dashed"></div>
+            <div class="form-group row">
+                <div style="margin:0 auto">
+                    <button class="btn btn-white" type="button" id="btnReset">重置</button>
+                    <button class="btn btn-primary" type="button" id="btnSave">保存</button>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script type="text/javascript">
+        $("#btnSave").click(function () {
+            var data = $("#addForm").serialize();
+            $.ajax({
+                type: $("#addForm").attr('method'),
+                url: "{% url 'system:instructor-create' %}",
+                data: data,
+                cache: false,
+                success: function (msg) {
+                    if (msg.status == 'success') {
+                        swal({
+                            title: "教师信息添加成功！",
+                            type: "success",
+                            confirmButtonText: "确定",
+                        }, function () {
+                            window.parent.location.reload();
+                        });
+                    } else if (msg.status == 'fail') {
+                        swal({
+                            title: msg.error_messages,
+                            type: "warning",
+                            //showCancelButton: true,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "确定",
+                            closeOnConfirm: false
+                        });
+                    }
+                    return;
+                }
+            });
+        });
+        /*点取消刷新新页面*/
+        $("#btnReset").click(function () {
+            window.location.reload();
+        })
+    </script>
+
+{% endblock %}

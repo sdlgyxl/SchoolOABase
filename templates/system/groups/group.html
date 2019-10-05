@@ -1,0 +1,228 @@
+{% extends "base-main.html" %}
+{% load staticfiles %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/plugins/dataTables/jquery.datatables.min.css' %}">
+    <link href="/static/css/plugins/sweetalert/sweetalert.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="ibox ">
+                <div class="ibox-title">
+                    <h5>角色信息 &nbsp;</h5>
+                    <button type="button" id="btnRefresh" class="btn btn-default">
+                        <i class="glyphicon glyphicon-repeat"></i>刷新
+                    </button>
+                    <button type="button" id="btnCreate" class="btn btn-default">
+                        <i class="glyphicon glyphicon-plus"></i>新增
+                    </button>
+                    <button type="button" id="btnDelete" class="btn btn-default">
+                        <i class="glyphicon glyphicon-trash"></i>删除
+                    </button>
+                    <div class="ibox-tools">
+                        <div class="form-inline">
+                            搜索：<input type="text" id="select" name="select" size="15" class="input-mini">
+                            <button type="button" id="selectClear" class="btn-default btn-mini"
+                                    style="margin-right: 20px">
+                                <i class="glyphicon glyphicon-refresh"></i>
+                            </button>
+
+                            <a class="collapse-link">
+                                <i class="fa fa-chevron-up"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div class="table-responsive">
+                        <table id="dblList" class="display table-striped table-bordered table-hover table-condensed"
+                               cellspacing="0"
+                               width="100%">
+                            <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="checkAll" class="group-checkable"
+                                           style="margin-left: -8px"></th>
+                                <th>编号</th>
+                                <th>角色名称</th>
+                                <th>操作</th>
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ request.menu_url_list }}
+{% endblock %}
+{% block javascripts %}
+
+    <script src="/static/js/plugins/sweetalert/sweetalert.min.js"></script>
+    <script src="{% static 'js/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'js/plugins/datatables/dataTables.const.js' %}"></script>
+    <script type="text/javascript">
+        $(function () {
+            initTable();
+        });
+
+        function initTable() {
+            //提示信息
+            var lang = {
+                "sProcessing": "处理中...",
+                "sLengthMenu": "每页 _MENU_ 项",
+                "sZeroRecords": "没有匹配结果",
+                "sInfo": "当前显示第 _START_ 至 _END_ 项，共 _TOTAL_ 项。",
+                "sInfoEmpty": "当前显示第 0 至 0 项，共 0 项",
+                "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+                "sInfoPostFix": "",
+                "sSearch": "搜索:",
+                "sUrl": "",
+                "sEmptyTable": "表中数据为空",
+                "sLoadingRecords": "载入中...",
+                "sInfoThousands": ",",
+                "oPaginate": {
+                    "sFirst": "首页",
+                    "sPrevious": "上页",
+                    "sNext": "下页",
+                    "sLast": "末页",
+                    "sJump": "跳转"
+                },
+                "oAria": {
+                    "sSortAscending": ": 以升序排列此列",
+                    "sSortDescending": ": 以降序排列此列"
+                }
+            };
+            $("#dblList").dataTable().fnDestroy();
+            //初始化表格
+            var table = $("#dblList").dataTable({
+                lengthMenu: [20, 50, 100, 200],
+                language: lang,  //提示信息
+                autoWidth: false,  //禁用自动调整列宽
+                stripeClasses: ["odd", "even"],  //为奇偶行加上样式，兼容不支持CSS伪类的场合
+                processing: true,  //隐藏加载提示,自行处理
+                serverSide: true,  //启用服务器端分页
+                searching: false,  //禁用原生搜索
+                orderMulti: false,  //启用多列排序
+                order: [[1, "desc"]],  //取消默认排序查询,否则复选框一列会出现小箭头
+                renderer: "bootstrap",  //渲染样式：Bootstrap和jquery-ui
+                pagingType: "full_numbers",  //分页样式：simple,simple_numbers,full,full_numbers
+                columnDefs: [{
+                    "targets": 'nosort',  //列的样式名
+                    "orderable": false    //包含上样式名‘nosort’的禁止排序
+                }],
+                ajax: function (data, callback, settings) {
+                    //封装请求参数
+                    var param = {};
+                    param.limit = data.length;//页面显示记录条数，在页面显示每页显示多少项的时候
+                    param.start = data.start;//开始的记录序号
+                    param.page = (data.start / data.length) + 1;//当前页码
+                    param.select = $("#select").val();
+                    //console.log(data)
+                    //ajax请求数据
+                    $.ajax({
+                        type: "GET",
+                        url: "{% url 'system:group-list' %}",
+                        cache: false,  //禁用缓存
+                        data: param,  //传入组装的参数
+                        dataType: "json",
+                        success: function (result) {
+                            //console.log(result);
+                            //setTimeout仅为测试延迟效果
+                            setTimeout(function () {
+                                //封装返回数据
+                                var returnData = {};
+                                returnData.draw = data.draw;//这里直接自行返回了draw计数器,应该由后台返回
+                                returnData.recordsTotal = result.total;//返回数据全部记录
+                                returnData.recordsFiltered = result.total;//后台不实现过滤功能，每次查询均视作全部结果
+                                returnData.data = result.data;//返回的数据列表
+                                //console.log(returnData);
+                                //调用DataTables提供的callback方法，代表数据已封装完成并传回DataTables进行渲染
+                                //此时的数据需确保正确无误，异常判断应在执行此回调前自行处理完毕
+                                callback(returnData);
+                            }, 200);
+                        }
+                    });
+                },
+                //列表表头字段
+                columns: [
+                    DATATABLES_CONSTANT.DATA_TABLES.COLUMN.CHECKBOX,
+                    {"data": "id", width: "10"},
+                    {"data": "name"},
+                    {
+                        title: "操作",
+                        data: "id",
+                        width: "16%",
+                        align: "right",
+                        bSortable: false,
+                        render:
+                            function (data, type, row, meta) {
+                                var ret = "<button title='详情-编辑' onclick='doUpdate("
+                                    + data + ")'><i class='glyphicon glyphicon-pencil'></i></button>";
+                                ret = ret + "<button title='关联用户' onclick='doUpdateUser("
+                                    + data + ")'><i class='glyphicon glyphicon-user'></i></button>";
+                                ret = ret + "<button title='关联菜单' onclick='doUpdateMenu("
+                                    + data + ")'><i class='glyphicon glyphicon-tree-conifer'></i></button>";
+                                ret = ret + "<button title='关联权限' onclick='doUpdatePermission("
+                                    + data + ")'><i class='glyphicon glyphicon-asterisk'></i></button>";
+                                ret = ret + "<button title='删除' onclick='doDelete("
+                                    + data + ")'><i class='glyphicon glyphicon-trash'></i></button>";
+                                return ret;
+                            }
+                    }
+                ]
+            }).api();
+            //此处需调用api()方法,否则返回的是JQuery对象而不是DataTables的API对象
+        }
+
+        //新建按钮
+        $("#btnCreate").click(function () {
+            showPopup('增加角色信息',540,240,"{% url 'system:group-edit' %}");
+        });
+
+        // 跳转到详情页面
+        function doUpdate(id) {
+            showPopup('修改角色信息',540,240,"{% url 'system:group-edit' %}" + '?id=' + id);
+        }
+
+        //关联用户
+        function doUpdateUser(id) {
+            showPopup('关联教师信息',800,510,"{% url 'system:group-group2instructor' %}" + '?id=' + id);
+        }
+
+        //关联菜单
+        function doUpdateMenu(id) {
+            showPopup('关联菜单信息',800,510,"{% url 'system:group-group2menu' %}" + '?id=' + id);
+        }
+
+        //关联权限
+        function doUpdatePermission(id) {
+            showPopup('关联权限信息',800,510,"{% url 'system:group-group2permission' %}" + '?id=' + id);
+        }
+
+        //刷新按钮
+        $("#btnRefresh").click(function () {
+            initTable();
+        });
+
+        $("#select").change(function () {
+            initTable();
+        });
+
+        $("#selectClear").click(function () {
+            $("#select").val('');
+            initTable();
+        });
+
+        //删除单个教师
+        function doDelete(id) {
+            deleteData("{% url 'system:group-delete' %}", "{{ csrf_token }}", initTable, id);
+        }
+
+        //批量删除
+        $("#btnDelete").click(function () {
+            deleteData("{% url 'system:group-delete' %}", "{{ csrf_token }}", initTable);
+        });
+    </script>
+{% endblock %}

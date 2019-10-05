@@ -1,0 +1,222 @@
+{% extends "base-main.html" %}
+{% load staticfiles %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/plugins/dataTables/jquery.datatables.min.css' %}">
+    <link href="/static/css/plugins/sweetalert/sweetalert.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="ibox ">
+                <div class="ibox-title">
+                    <h5>菜单信息 &nbsp;</h5>
+                    <button type="button" id="btnRefresh" class="btn btn-default">
+                        <i class="glyphicon glyphicon-repeat"></i>刷新
+                    </button>
+                    <button type="button" id="btnCreate" class="btn btn-default">
+                        <i class="glyphicon glyphicon-plus"></i>新增
+                    </button>
+                    <button type="button" id="btnDelete" class="btn btn-default">
+                        <i class="glyphicon glyphicon-trash"></i>删除
+                    </button>
+                    <div class="ibox-tools">
+                        <form class="form-inline">
+                            <a class="collapse-link">
+                                <i class="fa fa-chevron-up"></i>
+                            </a>
+                        </form>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div class="table-responsive">
+                        <table id="dtbList" class="display table-striped table-bordered table-hover table-condensed"
+                               style="width:100%">
+                            <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="checkAll" class="group-checkable"
+                                           style="margin-left: -8px"></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script src="/static/js/plugins/sweetalert/sweetalert.min.js"></script>
+    <script src="{% static 'js/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'js/plugins/datatables/dataTables.const.js' %}"></script>
+    <script>
+        //显示数据表格
+        var oDataTable = null;
+        $(function () {
+            oDataTable = initTable();
+
+            //显示列表
+            function initTable() {
+                var oTable = $('#dtbList').DataTable({
+                    "paging": true,
+                    "pagingType": "full_numbers",
+                    "lengthMenu": [20, 50, 100, 200],
+                    "processing": true,
+                    "searching": true, //是否开启搜索
+                    //"serverSide": true,//开启服务器获取数据
+                    "order": [[2, "asc"]], //默认排序
+                    ajax: {
+                        "url": "{% url 'system:menu-list' %}",
+                        "data": function (d) {
+                            d.select = $("#select").val();
+                        }
+                    },
+                    columns: [
+                        DATATABLES_CONSTANT.DATA_TABLES.COLUMN.CHECKBOX,
+                        {"title": "编号", "data": "id", "width": "6%"},
+                        {"title": "层次编码", "data": "number"},
+                        {"title": "菜单名称", "data": "name"},
+                        {"title": "上级菜单", "data": "parent__name"},
+                        {"title": "图标", "data": "icon"},
+                        {"title": "URL", "data": "url"},
+                        {
+                            title: "操作",
+                            data: "id",
+                            width: "8%",
+                            align: "right",
+                            bSortable: false,
+                            render:
+                                function (data, type, row, meta) {
+                                    var ret = "<button title='详情-编辑' onclick='doUpdate("
+                                        + data + ")'><i class='glyphicon glyphicon-pencil'></i></button>";
+                                    ret = ret + "<button name='btnDelete' title='删除' onclick='doDelete("
+                                        + data + ")'><i class='glyphicon glyphicon-trash'></i></button>";
+                                    return ret;
+                                }
+                        }
+                    ],
+                    "language":
+                        { // 定义语言
+                            "sProcessing":
+                                "加载中...",
+                            "sLengthMenu":
+                                "每页显示 _MENU_ 条记录",
+                            "sZeroRecords":
+                                "没有匹配的结果",
+                            "sInfo":
+                                "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+                            "sInfoEmpty":
+                                "显示第 0 至 0 项结果，共 0 项",
+                            "sInfoFiltered":
+                                "(由 _MAX_ 项结果过滤)",
+                            "sInfoPostFix":
+                                "",
+                            "sSearch":
+                                "搜索:",
+                            "sUrl":
+                                "",
+                            "sEmptyTable":
+                                "表中数据为空",
+                            "sLoadingRecords":
+                                "载入中...",
+                            "sInfoThousands":
+                                ",",
+                            "oPaginate":
+                                {
+                                    "sFirst":
+                                        "首页 ",
+                                    "sPrevious":
+                                        "上一页 ",
+                                    "sNext":
+                                        "下一页 ",
+                                    "sLast":
+                                        "末页"
+                                }
+                            ,
+                            "oAria":
+                                {
+                                    "sSortAscending":
+                                        ": 以升序排列此列",
+                                    "sSortDescending":
+                                        ": 以降序排列此列"
+                                }
+                        },
+                });
+                return oTable;
+            }
+        });
+
+        //刷新按钮
+        $("#btnRefresh").click(function () {
+            window.location.reload();
+        });
+
+        //新建按钮
+        $("#btnCreate").click(function () {
+            showPopup('增加菜单信息', 540, 420, "{% url 'system:menu-edit' %}");
+        });
+
+        // 跳转到教师详情页面
+        function doUpdate(id) {
+            showPopup('修改菜单信息', 540, 420, "{% url 'system:menu-edit' %}" + '?id=' + id);
+        }
+
+        //删除
+        function doDelete(id) {
+            deleteData("{% url 'system:menu-delete' %}", "{{ csrf_token }}", oDataTable.ajax.reload, id);
+        }
+
+        //批量删除
+        $("#btnDelete").click(function () {
+            deleteData("{% url 'system:menu-delete' %}", "{{ csrf_token }}", oDataTable.ajax.reload);
+        });
+
+        //删除单个教师
+        function doDelete222(id) {
+            swal({
+                    title: "你确定？",
+                    text: "你将删除编号为<" + id + ">的菜单信息！",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#DD6B55",
+                    confirmButtonText: "删除",
+                    cancelButtonText: "取消",
+                    closeOnConfirm: false,
+                },
+                function (isConfirm) {
+                    if (isConfirm) {
+                        $.ajax({
+                            type: "POST",
+                            url: "{% url 'system:menu-delete' %}?id=" + id,
+                            data: {"id": id, csrfmiddlewaretoken: '{{ csrf_token }}'},  //防止post数据时报 csrf_token 403
+                            cache: false,
+                            success: function (msg) {
+                                if (msg.result) {
+                                    swal("删除成功", "", "success");
+                                    oDataTable.ajax.reload();
+                                } else {
+                                    swal('删除失败', "", "warning");
+                                }
+                            }
+                        });
+                    }
+                }
+            );
+        }
+
+        $("#select").change(function () {
+            oDataTable.ajax.reload();
+        });
+    </script>
+{% endblock %}

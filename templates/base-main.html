@@ -1,0 +1,14 @@
+{% extends "left-right.html" %}
+{% load staticfiles %}
+
+{% block menu %}
+    {{ request.session.my_menu_string |safe }}
+{% endblock %}
+{% block content %}
+{% endblock %}
+{% block menuscripts %}
+    <script type="text/javascript">
+        menu_list ={{ request.session.tree_menus|safe }}
+    </script>
+{% endblock %}
+

@@ -1,0 +1,235 @@
+{% extends "base-static.html" %}
+{% load staticfiles %}
+
+{% block main %}
+    <nav class="navbar-default navbar-static-side" role="navigation">
+        <div class="sidebar-collapse">
+            <ul class="nav metismenu">
+                <li class="nav-header">
+                    <div class="dropdown profile-element">
+                        <img alt="image" class="rounded-circle" src="/media/{{ request.user.headimage }}" width="48"
+                             height="48"/>
+                        <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                            <span class="block m-t-xs font-bold">{{ request.user.name }}</span>
+                            <span class="text-muted text-xs block">{{ request.user.post|default_if_none:'员工' }} <b
+                                    class="caret"></b></span>
+                        </a>
+                        <ul class="dropdown-menu animated fadeInRight m-t-xs">
+                            <li><a class="dropdown-item" href="#"
+                                   onclick="showPopup('个人信息',800,720,'{% url 'system:home-profile' %}');">个人信息</a>
+                            </li>
+                            <li><a class="dropdown-item" href="#"
+                                   onclick="showPopup('修改登录密码',540,280,'{% url 'system:home-login_pwd_change' %}');">修改登录密码</a>
+                            </li>
+                            <li><a class="dropdown-item" href="#"
+                                   onclick="showPopup('修改私有密码',540,280,'{% url 'system:home-private_pwd_change' %}');">修改私有密码</a>
+                            </li>
+                            <li class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/logout/">登出</a></li>
+                        </ul>
+                    </div>
+                    <div class="logo-element">
+                        <img src="/static/img/logo2.png" width="50" height="50"/>
+                    </div>
+                </li>
+            </ul>
+            <ul class="nav metismenu" id="side-menu">
+                {% block menu %}
+
+                {% endblock %}
+            </ul>
+        </div>
+    </nav>
+    <div id="page-wrapper" class="gray-bg">
+        <div class="row border-bottom">
+            <nav class="navbar navbar-static-top white-bg" role="navigation" style="margin-bottom: 0">
+                <div class="navbar-header">
+                    <a class="navbar-minimalize minimalize-styl-2 btn btn-primary " href="#"><i class="fa fa-bars">
+                        菜单</i>
+                    </a>
+                    <div class="minimalize-styl-2">
+                        {% block Breadcrumb %}
+
+                        {% endblock %}
+                    </div>
+                </div>
+                <ul class="nav navbar-top-links navbar-right">
+                    <li>
+                        <span class="m-r-sm text-muted welcome-message">欢迎使用美和易思•莱芜School OA 系统</span>
+                    </li>
+                    {% block message %}
+                    {% endblock %}
+                    <li>
+                        <a href="/logout/">
+                            <i class="fa fa-sign-out"></i> 注销
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% block header %}
+        {% endblock %}
+        <div class="wrapper wrapper-content animated fadeInRight">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="ibox ">
+                        {% block content %}
+                        {% endblock %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--底部版权-->
+        <div class="footer">
+            <div class="float-right">
+                <strong>美和易思&bull;莱芜School&nbsp;OA&nbsp;系统</strong>
+            </div>
+            <div>
+                Copyright @莱芜校区学术团队 &copy; 2019-2020
+            </div>
+        </div>
+        <!--底部版权END-->
+    </div>
+    <div class="modal inmodal" id="div_popup" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" id="popup_dialog">
+            <div class="modal-content animated fadeIn"><!--bounceInRight-->
+                <div class="modal-header" style="padding: 5px">
+                    <button type="button" class="close" data-dismiss="modal" style="margin:-0.3rem 0 -2rem auto">
+                        <span aria-hidden="true">×</span>
+                        <span class="sr-only">Close</span>
+                    </button>
+                    <h4 class="modal-title" id="h4_modal">aaa</h4>
+                </div>
+                <iframe scrolling="auto" allowtransparency="true" id="iframe_modal"
+                        name="iframe_modal" onload="this.className='';" frameborder="0"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mainly scripts -->
+    <script src="{% static 'js/jquery-3.3.1.js' %}"></script>
+    <script src="{% static 'js/popper.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.js' %}"></script>
+    <script src="{% static 'js/plugins/metisMenu/jquery.metisMenu.js' %}"></script>
+    <script src="{% static 'js/plugins/slimscroll/jquery.slimscroll.min.js' %}"></script>
+    <script src="{% static 'js/plugins/jquery-ui/jquery-ui.min.js' %}"></script>
+    <!-- Custom and plugin javascript -->
+    <script src="{% static 'js/inspinia.js' %}"></script>
+    <script src="{% static 'js/plugins/pace/pace.min.js' %}"></script>
+    <script>
+        //关闭模态窗口
+        function closePopup() {
+            $('#div_popup').modal('hide');
+        }
+
+        $('.modal').draggable();
+
+        //checkbox全选
+        $("#checkAll").on("click", function () {
+            if ($(this).prop("checked") === true) {
+                $("input[name='checkList']").prop("checked", $(this).prop("checked"));
+                $('#example tbody tr').addClass('selected');
+            } else {
+                $("input[name='checkList']").prop("checked", false);
+                $('#example tbody tr').removeClass('selected');
+            }
+        });
+
+        //删除
+        function deleteData(toUrl, csrf_token, success_action, del_ids) {
+            sId = "";
+            if (del_ids) {
+                sId = del_ids;
+            } else {
+                if ($("input[name='checkList']:checked").length == 0) {
+                    swal('请选择要删除的记录', "", "warning");
+                    return;
+                }
+                var arrId = new Array();
+                $("input[name='checkList']:checked").each(function () {
+                    arrId.push($(this).val());
+                });
+
+                sId = arrId.join(',');
+            }
+            swal({
+                    title: "确定删除选中的信息吗？",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#DD6B55",
+                    confirmButtonText: "删除",
+                    cancelButtonText: "取消",
+                    closeOnConfirm: false,
+                },
+                function (isConfirm) {
+                    if (isConfirm) {
+                        $.ajax({
+                            type: "POST",
+                            url: toUrl,
+                            data: {"id": sId, csrfmiddlewaretoken: csrf_token},
+                            cache: false,
+                            success: function (msg) {
+                                if (msg.result) {
+                                    swal('操作成功', "", "success");
+                                    success_action();
+                                } else {
+                                    //alert(msg.message);
+                                    swal('操作失败', "", "warning");
+                                }
+                                return;
+                            }
+                        });
+                    }
+                });
+        }
+
+        $(function () {
+            reveal_menu();
+        });
+
+        function reveal_menu() {
+            var nav = document.getElementById("side-menu");
+            var links = nav.getElementsByTagName("li");
+            var lilen = nav.getElementsByTagName("a");
+            var currenturl = document.location.href;
+            var last = -1;
+            for (var i = 0; i < links.length; i++) {
+                var linkurl = lilen[i].getAttribute("href");
+                if (currenturl.indexOf(linkurl) != -1) {
+                    last = i;
+                }
+            }
+            if (last == -1)
+                return;
+            links[last].className = "active";
+            p = links[last].parentElement
+            if (p.className == "nav nav-third-level collapse") {
+                p.className = "nav nav-third-level collapse in"
+                p.parentElement.className = 'active'
+                p = p.parentElement.parentElement
+            }
+            if (p.className == "nav nav-second-level collapse") {
+                p.className = "nav nav-second-level collapse in"
+                p.parentElement.className = 'active'
+            }
+        }
+
+        function showPopup(title,w,h,url) {
+            $('#h4_modal').text(title);
+            $("#popup_dialog").width(w);
+            $('#iframe_modal').height(h);
+            $('#iframe_modal').attr('src', url);
+            $('#div_popup').modal({backdrop: 'static'});
+        }
+    </script>
+    {% block menuscripts %}
+
+    {% endblock %}
+    {% block javascripts %}
+
+    {% endblock %}
+
+    {% block right_popup %}
+    {% endblock %}
+
+{% endblock %}

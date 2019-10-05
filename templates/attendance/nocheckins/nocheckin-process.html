@@ -1,0 +1,23 @@
+<div class="form-group row">
+    <label class="col-2 col-form-label">缺打卡时间</label>
+    <div class="col-3">
+        <input class="form-control" type="text" value="{{ data.missing_time }}"/>
+    </div>
+    <label class="col-2 col-form-label">缺打卡时段</label>
+    <div class="col-3">
+        <input class="form-control" type="text"
+               value="{% for item in check_in_period %}{% if item.0 == data.check_in_period %}{{ item.1 }}{% endif %}{% endfor %}"/>
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-2 col-form-label">缺打卡原因</label>
+    <div class="col-8">
+        <textarea class="form-control">{{ data.reason }}</textarea>
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-2 col-form-label">缺打卡事由</label>
+    <div class="col-8">
+        <textarea class="form-control">{{ data.witness }}</textarea>
+    </div>
+</div>

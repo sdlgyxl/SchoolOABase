@@ -1,0 +1,75 @@
+{% extends 'base-popup.html' %}
+{% load staticfiles %}
+{% block content %}
+    <div class="ibox-content">
+        <form class="form-horizontal" id="changePasswordForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" name='id' value="{{ instructor.id }}"/>
+            <input type="hidden" name='instructor' value="save"/>
+            <div class="form-group row">
+                <label class="col-3 col-form-label">原密码</label>
+                <div class="col-8">
+                    <input class="form-control" type="password" name="old_password"></input>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-3 col-form-label">新密码</label>
+                <div class="col-8">
+                    <input class="form-control" type="password" name="new_password"></input>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-3 col-form-label">确认密码</label>
+                <div class="col-8">
+                    <input class="form-control" type="password" name="confirm_password"></input>
+                </div>
+            </div>
+            <div class="form-group row">
+                <div style="margin:0 auto">
+                    <button type="button" id="btnCancel" class="btn btn-default margin-right ">关闭</button>
+                    <button type="button" id="btnSave" class="btn btn-info margin-right ">确定</button>
+                </div>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script type="text/javascript">
+        $("#btnSave").click(function () {
+            var data = $("#changePasswordForm").serialize();
+            $.ajax({
+                type: $("#changePasswordForm").attr('method'),
+                url: "{% url 'system:home-login_pwd_change' %}",
+                data: data,
+                cache: false,
+                success: function (msg) {
+                    if (msg.status == 'success') {
+                        swal({
+                            title: "密码修改成功！",
+                            type: "success",
+                            confirmButtonText: "确定",
+                            closeOnConfirm: true
+                        }, function () {
+                            parent.closePopup();
+                        });
+                    } else if (msg.status == 'fail') {
+                        swal({
+                            title: msg.error_messages,
+                            type: "warning",
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "确定",
+                            closeOnConfirm: false
+                        });
+                    }
+                    return;
+                }
+            });
+        });
+        /*点取消刷新页面*/
+        $("#btnCancel").click(function () {
+            parent.closePopup();
+        });
+    </script>
+
+{% endblock %}

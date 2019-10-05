@@ -1,0 +1,92 @@
+{% extends 'base-popup.html' %}
+{% load staticfiles %}
+
+{% block content %}
+    <div class="ibox-content">
+        <form class="form-horizontal" id="editForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" name='id' value="{{ permission.id }}"/>
+            <legend style="overflow:hidden">
+                <h4 style="width: 200px;float: left">{% if permission.id %}编辑{% else %}新增{% endif %}权限信息</h4>
+            </legend>
+            <div class="form-group row">
+                <label class="col-3 col-form-label">模块名称</label>
+                <div class="col-8">
+                    <select class="form-control" name="content_type">
+                        <option value="{{ permission.content_type.id }}">
+                            {% if permission.content_type.id %}{{ permission.content_type.name }}
+                            {% else %}--请选择--
+                            {% endif %}
+                        </option>
+                        {% for content_type in content_types %}
+                            <option value={{ content_type.id }}> {{ content_type.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-3 col-form-label">权限代码</label>
+                <div class="col-8">
+                    <input class="form-control" name="codename" type="text" value="{{ permission.codename }}"/>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-3 col-form-label">说明</label>
+                <div class="col-8">
+                    <input class="form-control" name="name" type="text" value="{{ permission.name }}"/>
+                </div>
+            </div>
+            <div class="hr-line-dashed"></div>
+            <div class="form-group row">
+                <div style="margin:0 auto">
+                    <button type="button" id="btnCancel" class="btn btn-default margin-right ">重置</button>
+                    <button type="button" id="btnSave" class="btn btn-info margin-right ">保存</button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script type="text/javascript">
+
+        $("#btnSave").click(function () {
+            var data = $("#editForm").serialize();
+            $.ajax({
+                type: $("#editForm").attr('method'),
+                url: "{% url 'system:permission-edit' %}",
+                data: data,
+                cache: false,
+                success: function (msg) {
+                    if (msg.result) {
+                        swal({
+                            title: "权限信息保存成功！",
+                            type: "success",
+                            confirmButtonText: "确定",
+                        }, function () {
+                            window.parent.location.reload();
+                        });
+                    } else {
+                        swal({
+                            title: "权限信息保存失败！",
+                            type: "warning",
+                            //showCancelButton: true,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "确定",
+                            closeOnConfirm: false
+                        });
+                    }
+                    return;
+                }
+            });
+        });
+
+
+        /*点取消刷新新页面*/
+        $("#btnCancel").click(function () {
+            window.location.reload();
+        });
+    </script>
+
+{% endblock %}

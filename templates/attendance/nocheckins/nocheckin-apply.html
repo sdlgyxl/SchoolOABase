@@ -1,0 +1,28 @@
+<div class="form-group row">
+    <label class="col-2 col-form-label">缺打卡时间</label>
+    <div class="col-3">
+        <input class="form-control" type="text" name="missing_time" placeholder="例:2019-1-1 12:00"/>
+    </div>
+    <label class="col-2 col-form-label">缺打卡时段</label>
+    <div class="col-3">
+        <select class="form-control" name="check_in_period">
+            <option>--请选择时段--</option>
+            <option value="1">上午上班</option>
+            <option value="2">上午下班</option>
+            <option value="3">下午上班</option>
+            <option value="4">下午下班</option>
+        </select>
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-2 col-form-label">缺打卡原因</label>
+    <div class="col-8">
+        <textarea class="form-control" name="reason" rows="3"></textarea>
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-2 col-form-label">缺打卡事由</label>
+    <div class="col-8">
+        <textarea class="form-control" name="witness" rows="3"></textarea>
+    </div>
+</div>

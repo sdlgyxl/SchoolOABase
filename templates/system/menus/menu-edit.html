@@ -1,0 +1,103 @@
+{% extends 'base-popup.html' %}
+{% load staticfiles %}
+
+{% block content %}
+    <div class="ibox-content">
+        <form class="form-horizontal" id="editForm" method="post">
+            {% csrf_token %}
+            <input type="hidden" name='id' value="{{ menu.id }}"/>
+            <legend style="overflow:hidden">
+                <h4 style="width: 200px;float: left">{% if menu.id %}编辑{% else %}新增{% endif %}菜单信息</h4>
+            </legend>
+            <div class="form-group row">
+                <label class="col-3 col-form-label">菜单名称</label>
+                <div class="col-8">
+                    <input class="form-control" name="name" type="text" value="{{ menu.name }}"/>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-3 col-form-label">上级菜单</label>
+                <div class="col-8">
+                    <select class="form-control" name="parent">
+                        <option value="{{ menu.parent.id }}">
+                            {% if menu.parent.name %}{{ menu.parent.number }} -- {{ menu.parent.name }}{% else %}
+                                --请选择--{% endif %}</option>
+                        {% for parent_menu in menu_all %}
+                            <option value={{ parent_menu.id }}> {{ parent_menu.number }}
+                                -- {{ parent_menu.name }} </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-3 col-form-label">层次编码</label>
+                <div class="col-8">
+                    <input class="form-control" name="number" type="text" value="{{ menu.number }}"/>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-3 col-form-label">图标</label>
+                <div class="col-8">
+                    <input class="form-control" name="icon" type="text" value="{{ menu.icon | default:'' }}"/>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label class="col-3 col-form-label">URL</label>
+                <div class="col-8">
+                    <input class="form-control" name="url" type="text" value="{{ menu.url | default:'' }}"/>
+                </div>
+            </div>
+            <div class="hr-line-dashed"></div>
+            <div class="form-group row">
+                <div style="margin:0 auto">
+                    <button type="button" id="btnCancel" class="btn btn-default margin-right ">重置</button>
+                    <button type="button" id="btnSave" class="btn btn-info margin-right ">保存</button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script type="text/javascript">
+
+        $("#btnSave").click(function () {
+            var data = $("#editForm").serialize();
+            $.ajax({
+                type: $("#editForm").attr('method'),
+                url: "{% url 'system:menu-edit' %}",
+                data: data,
+                cache: false,
+                success: function (msg) {
+                    if (msg.result) {
+                        swal({
+                            title: "菜单信息保存成功！",
+                            type: "success",
+                            confirmButtonText: "确定",
+                        }, function () {
+                            window.parent.location.reload();
+                        });
+                    } else {
+                        swal({
+                            title: "菜单信息保存失败！",
+                            type: "warning",
+                            //showCancelButton: true,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "确定",
+                            closeOnConfirm: false
+                        });
+                    }
+                    return;
+                }
+            });
+        });
+
+
+        /*点取消刷新新页面*/
+        $("#btnCancel").click(function () {
+            window.location.reload();
+        });
+    </script>
+
+{% endblock %}
